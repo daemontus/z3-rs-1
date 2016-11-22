@@ -62,6 +62,13 @@ impl<'ctx> Solver<'ctx> {
         }
     }
 
+    pub fn reset(&self) {
+        unsafe {
+            let guard = Z3_MUTEX.lock().unwrap();
+            Z3_solver_reset(self.ctx.z3_ctx, self.z3_slv);
+        }
+    }
+
     pub fn get_model(&self) -> Model<'ctx> {
         Model::of_solver(self)
     }
