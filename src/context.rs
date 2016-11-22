@@ -13,7 +13,7 @@ impl Context {
         Context {
             z3_ctx: unsafe {
                 let guard = Z3_MUTEX.lock().unwrap();
-                let p = Z3_mk_context_rc(cfg.z3_cfg);
+                let p = Z3_mk_context(cfg.z3_cfg);
                 debug!("new context {:p}", p);
                 p
             }
