@@ -29,6 +29,23 @@ impl <'ctx> Goal<'ctx> {
         }
     }
 
+    pub fn formulas(&self) -> Vec<Ast<'ctx>> {
+        unsafe {
+            let guard = Z3_MUTEX.lock().unwrap();
+            let size = Z3_goal_num_exprs(self.ctx.z3_ctx, self.z3_goal);
+            let mut result = vec!();
+            for i in 0..size {
+                let ast = Z3_goal_formula(self.ctx.z3_ctx, self.z3_goal, i);
+                Z3_inc_ref(self.ctx.z3_ctx, ast);
+                result.push(Ast {
+                    ctx: self.ctx,
+                    z3_ast: ast
+                })
+            }
+            result
+        }
+    }
+
     pub fn reset(&self) {
         unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
