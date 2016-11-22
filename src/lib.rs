@@ -23,6 +23,8 @@ mod ast;
 mod solver;
 mod optimize;
 mod model;
+mod tactic;
+mod goal;
 
 // Z3 appears to be only mostly-threadsafe, a few initializers
 // and such race; so we mutex-guard all access to the library.
@@ -76,3 +78,14 @@ pub struct Optimize<'ctx>
     z3_opt: Z3_optimize
 }
 
+pub struct Tactic<'ctx>
+{
+    ctx: &'ctx Context,
+    z3_tactic: Z3_tactic
+}
+
+pub struct Goal<'ctx>
+{
+    ctx: &'ctx Context,
+    z3_goal: Z3_goal
+}

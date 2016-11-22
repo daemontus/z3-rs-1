@@ -70,3 +70,51 @@ fn test_solving_for_model() {
     assert!(xv + 2 > 7);
 }
 
+#[test]
+fn test_ast_to_string() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let x = ctx.named_int_const("x");
+    let y = ctx.named_int_const("y");
+    let zero = ctx.from_i64(0);
+    let two = ctx.from_i64(2);
+    let seven = ctx.from_i64(7);
+
+    let formula = (x.gt(&y)).and(&[&y.gt(&zero), &y.add(&[&seven])._eq(&two)]);
+
+    let expected_string = "(and (> x y) (> y 0) (= (+ y 7) 2))";
+    let real_string = formula.as_smtlib2_string();
+
+    assert_eq!(expected_string, real_string);
+
+    /*
+    let x_sym = ctx.str_sym("x");
+    let x_sort = ctx.int_sort();
+    let y_sym = ctx.str_sym("y");
+    let y_sort = ctx.int_sort();
+
+    let symbols = vec!((&x_sym, &x_sort), (&y_sym, &y_sort));
+
+    let reconstructed = Ast::from_smtlib2_string(&ctx, &real_string, &symbols);
+
+    assert_eq!(formula, reconstructed)
+    */
+}
+
+#[test]
+fn test_string_to_ast() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let x = ctx.named_int_const("x");
+    let y = ctx.named_int_const("y");
+    let zero = ctx.from_i64(0);
+    let two = ctx.from_i64(2);
+    let seven = ctx.from_i64(7);
+
+    let expected_formula = (x.gt(&y)).and(&[&y.gt(&zero), &y.add(&[&seven])._eq(&two)]);
+
+    let formula_string = "(declare-const x Int)(declare-const y Int)(assert (and (> x y) (> y 0) (= (+ y 7) 2)))";
+    let real_formula = Ast::from_smtlib2_string(&ctx, formula_string);
+
+    assert_eq!(expected_formula, real_formula);
+}

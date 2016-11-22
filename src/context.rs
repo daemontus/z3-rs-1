@@ -4,6 +4,8 @@ use Context;
 use Sort;
 use Symbol;
 use Ast;
+use Tactic;
+use Goal;
 use Z3_MUTEX;
 
 impl Context {
@@ -128,6 +130,14 @@ impl Context {
 
     pub fn from_real(&self, num: i32, den: i32) -> Ast {
         Ast::from_real(self, num, den)
+    }
+
+    pub fn mk_tactic(&self, name: &str) -> Tactic {
+        Tactic::from_name(self, name)
+    }
+
+    pub fn mk_goal(&self, models: bool, unsat_cores: bool, proofs: bool) -> Goal {
+        Goal::new(self, models, unsat_cores, proofs)
     }
 }
 

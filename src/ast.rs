@@ -7,6 +7,10 @@ use Z3_MUTEX;
 use std::hash::{Hash, Hasher};
 use std::cmp::{PartialEq, Eq};
 use std::ffi::CString;
+use std::ffi::CStr;
+use std::fmt::Debug;
+use std::fmt::Formatter;
+use std::fmt::Error;
 
 macro_rules! unop {
     ( $f:ident, $z3fn:ident ) => {
@@ -58,6 +62,24 @@ macro_rules! varop {
 }
 
 impl<'ctx> Ast<'ctx> {
+
+    pub fn from_smtlib2_string( ctx: &'ctx Context,
+                                str: &str
+                                /*sorts: &Vec<(&Symbol, &Sort)>*/) -> Ast<'ctx> {
+        debug!("Ast from string {:?}", str);
+        return Ast::new(ctx, unsafe {
+            let guard = Z3_MUTEX.lock().unwrap();
+            let ss = CString::new(str).unwrap();
+            //TODO Symbols are not working for some reason :(
+            let sort_symbols: Vec<Z3_symbol> = vec!();//sorts.iter().map(|&(ref a, _)| a.z3_sym).collect();
+            let sort_objects: Vec<Z3_sort> = vec!();//sorts.iter().map(|&(_, ref b)| b.z3_sort).collect();
+            let decl_symbols: Vec<Z3_symbol> = vec!();
+            let decl_objects: Vec<Z3_func_decl> = vec!();
+            Z3_parse_smtlib2_string(ctx.z3_ctx, ss.as_ptr(),
+                                    0/*sorts.len() as u32*/, sort_symbols.as_ptr(), sort_objects.as_ptr(),
+                                    0, decl_symbols.as_ptr(), decl_objects.as_ptr())
+        })
+    }
 
     pub fn new(ctx: &Context, ast: Z3_ast) -> Ast {
         assert!(!ast.is_null());
@@ -179,6 +201,14 @@ impl<'ctx> Ast<'ctx> {
         }
     }
 
+    pub fn as_smtlib2_string(&self) -> String {
+        unsafe {
+            let guard = Z3_MUTEX.lock().unwrap();
+            let s = CStr::from_ptr(Z3_ast_to_string(self.ctx.z3_ctx, self.z3_ast));
+            s.to_str().unwrap().to_string()
+        }
+    }
+
     varop!(distinct, Z3_mk_distinct);
 
     // Boolean ops
@@ -284,3 +314,11 @@ impl<'ctx> PartialEq<Ast<'ctx>> for Ast<'ctx> {
 }
 
 impl<'ctx> Eq for Ast<'ctx> { }
+
+impl<'ctx> Debug for Ast<'ctx> {
+
+    fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
+        let str = self.as_smtlib2_string();
+        f.write_str(&str)
+    }
+}
