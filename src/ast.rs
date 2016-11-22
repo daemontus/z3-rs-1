@@ -209,6 +209,19 @@ impl<'ctx> Ast<'ctx> {
         }
     }
 
+    pub fn mk_and(ctx: &'ctx Context, ast: Vec<Ast<'ctx>>) -> Ast<'ctx> {
+        unsafe {
+            let guard = Z3_MUTEX.lock().unwrap();
+            let asts: Vec<Z3_ast> = ast.iter().map(|k| k.z3_ast).collect();
+            let a = Z3_mk_and(ctx.z3_ctx, ast.len() as u32, asts.as_slice().as_ptr());
+            Z3_inc_ref(ctx.z3_ctx, a);
+            return Ast {
+                ctx: ctx,
+                z3_ast: a
+            }
+        }
+    }
+
     varop!(distinct, Z3_mk_distinct);
 
     // Boolean ops
