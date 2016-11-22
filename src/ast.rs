@@ -335,3 +335,17 @@ impl<'ctx> Debug for Ast<'ctx> {
         f.write_str(&str)
     }
 }
+
+impl<'ctx> Clone for Ast<'ctx> {
+    fn clone(&self) -> Self {
+        unsafe {
+            let guard = Z3_MUTEX.lock().unwrap();
+            let r = Ast {
+                ctx: self.ctx,
+                z3_ast: self.z3_ast
+            };
+            Z3_inc_ref(self.ctx.z3_ctx, self.z3_ast);
+            r
+        }
+    }
+}
