@@ -1,31 +1,28 @@
 extern crate z3;
-use self::z3::{Context, Config, Ast};
-
+use self::z3::{Context, Config, Ast, Tactic, Goal};
+extern crate z3_sys;
+use self::z3_sys::*;
+use std::ffi::CString;
 
 fn main() {
-    let cfg = Config::new();
-    let ctx = Context::new(&cfg);
-    let x = ctx.named_int_const("x");
-    let y = ctx.named_int_const("y");
-    let zero = ctx.from_i64(0);
-    let two = ctx.from_i64(2);
-    let seven = ctx.from_i64(7);
-
-    let formula = (x.gt(&y)).and(&[&y.gt(&zero), &y.add(&[&seven])._eq(&two)]);
-
-    let expected_string = "(declare-const x Int)\n(assert (= (+ 1 2) x))";
-    let real_string = formula.as_smtlib2_string();
-    //assert_eq!(expected_string, real_string);
-
-    let x_sym = ctx.str_sym("x");
-    let x_sort = ctx.int_sort();
-    let y_sym = ctx.str_sym("y");
-    let y_sort = ctx.int_sort();
-
-    let symbols = vec!((&x_sym, &x_sort), (&y_sym, &y_sort));
-
-    println!("Str: ${:?}", real_string);
-    println!("Formula: ${:?}", formula);
-    let r = Ast::from_smtlib2_string(&ctx, expected_string);
-    println!("Reconstruction: {:?}", r);
+    let z3 = Context::new(&Config::new());
+    let str = "(declare-const k!0 Real)
+(assert (let ((a!1 (or false
+               (> (+ (/ 2813.0 6250.0) (* k!0 0.0)) 0.0)
+               (> (+ (/ 428273.0 1000000.0) (* k!0 0.0)) 0.0))))
+  (and a!1 true true (> k!0 0.0) (< k!0 1.0))))";
+    let f = Ast::from_smtlib2_string(&z3, str);
+    println!("Ast: {:?}", f);
+    let name = CString::new("ctx-solver-simplify").unwrap();
+    let t = Z3_mk_tactic(z3.z3_ctx, name.as_ptr());
+    //let tactic = z3.z3_ctx//Tactic::from_name(&z3, "ctx-solver-simplify");
+    let goal = Goal::new(&z3, false, false, false);
+    goal.assert(&f);
+    let results = t.apply(goal);
+    if results.len() != 1 {
+        panic!("Unexpected number of goals after optimisation")
+    } else {
+        let formulas = results[0].formulas();
+        println!("Simplified: {:?}", formulas);
+    }
 }

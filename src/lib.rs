@@ -38,7 +38,7 @@ pub struct Config {
 }
 
 pub struct Context {
-    z3_ctx: Z3_context
+    pub z3_ctx: Z3_context
 }
 
 pub struct Symbol<'ctx>
